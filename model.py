@@ -78,7 +78,7 @@ def create_plot(petscan, heatmap, num_slices = 75):
     for step in range(num_slices):
         fig.add_trace(
             go.Heatmap(
-                z=petscan[::-1,:,step], colorscale = 'Rainbow', showscale = False),
+                z=petscan[::-1,:,step,0], colorscale = 'Rainbow', showscale = False),
             row=1, col=1)
     for step in range(num_slices):
         fig.add_trace(
