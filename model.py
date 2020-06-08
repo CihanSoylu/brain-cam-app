@@ -57,7 +57,7 @@ def get_pet_scan(dicom_paths):
     # Crop out the empty part of the image
     pet_scan = pet_scan[30:128,40:118,:]
 
-    return pet_scan
+    return np.expand_dims(pet_scan, axis = -1)
 
 def get_prediction(pet_scan):
     pet_scan = np.expand_dims(pet_scan, axis=0)
