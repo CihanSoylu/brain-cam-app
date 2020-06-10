@@ -48,13 +48,16 @@ def index():
                 dicom_paths = model.get_dicom_paths(img_dir)
 
                 pet_scan = model.get_pet_scan(dicom_paths)
-                heat_map = model.compute_heatmap(pet_scan)
 
                 prediction = model.get_prediction(pet_scan)
-                if prediction.squeeze() > 0.5:
-                    diagnosis = 'AD'
+                if prediction[1] > 0.5:
+                    diagnosis = 'Alzheimer\'s Disease'
                 else:
-                    diagnosis = 'CN'
+                    diagnosis = 'Cognitively Normal'
+
+                classidx = np.argmax(prediction)
+
+                heat_map = model.compute_saliency_map(pet_scan, classidx = classidx)
 
                 fig = model.create_plot(pet_scan, heat_map)
                 redata = json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder))
@@ -64,7 +67,7 @@ def index():
 
                 empty_folder(OUTPUT_DIR)
 
-                return render_template('show.html', prediction = prediction, diagnosis = diagnosis, plot_json = fig_json)
+                return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
     return render_template('index.html')
 
 if __name__ == '__main__':

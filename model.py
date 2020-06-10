@@ -16,7 +16,9 @@ import plotly.graph_objects as go
 import plotly
 from plotly.subplots import make_subplots
 
-model = tf.keras.models.load_model('static/model/3dcnn_model_gap_98_78_min_loss.h5')
+model1 = tf.keras.models.load_model('static/model/3dcnn_model_dense16_98_78_60_batch32_min_loss.h5')
+model2 = tf.keras.models.load_model('static/model/3dcnn_model_gap_98_78_60_batch32_min_loss_epoch600.h5')
+
 
 def get_dicom_paths(img_dir):
     dicom_paths = glob.glob(img_dir+'/*')
@@ -46,7 +48,7 @@ def get_pet_scan(dicom_paths):
         slices.append(img_array)
 
     # Take 75 slices by pruning the first 11 and last 10 slices.
-    pet_scan = np.concatenate(slices[11:86], axis=-1)
+    pet_scan = np.concatenate(slices[16:76], axis=-1)
     #pet_scan[pet_scan < 500] = 0
 
     # Scale the images.
@@ -62,13 +64,13 @@ def get_pet_scan(dicom_paths):
 def get_prediction(pet_scan):
     pet_scan = np.expand_dims(pet_scan, axis=0)
 
-    prediction = model.predict(pet_scan)
+    prediction = (model1.predict(pet_scan).squeeze() + model2.predict(pet_scan).squeeze())/2
     return prediction
 
 
-def create_plot(petscan, heatmap, num_slices = 75):
+def create_plot(petscan, heatmap, num_slices = 60):
 
-    fig = make_subplots(rows=1, cols=2)
+    fig = make_subplots(rows=1, cols=3)
     # Create figure
     #fig = go.Figure()
     zmax = np.max(heatmap)
@@ -83,11 +85,24 @@ def create_plot(petscan, heatmap, num_slices = 75):
     for step in range(num_slices):
         fig.add_trace(
             go.Heatmap(
-                z=heatmap[::-1,:,step], colorscale = 'viridis', zmax = zmax, zmin = zmin),
+                z=heatmap[::-1,:,step], colorscale = 'Plasma', zmax = zmax, zmin = zmin),
             row=1, col=2)
+    for step in range(num_slices):
+        fig.add_trace(
+            go.Heatmap(
+                z=petscan[::-1,:,step,0], colorscale = 'gray', showscale = False),
+            row=1, col=3)
+    for step in range(num_slices):
+        fig.add_trace(
+            go.Heatmap(
+                z=heatmap[::-1,:,step], colorscale = 'Plasma', zmax = zmax, zmin = zmin, opacity = 0.5),
+            row=1, col=3)
 
-    fig.data[11].visible = True
-    fig.data[11 + num_slices].visible = True
+    fig.data[0].visible = True
+    fig.data[num_slices].visible = True
+    fig.data[2*num_slices].visible = True
+    fig.data[3*num_slices].visible = True
+
 
 
     # Create and add slider
@@ -100,57 +115,69 @@ def create_plot(petscan, heatmap, num_slices = 75):
         )
         step['args'][0]['visible'][i] = True
         step['args'][0]['visible'][i+num_slices] = True
+        step['args'][0]['visible'][i+2*num_slices] = True
+        step['args'][0]['visible'][i+3*num_slices] = True
+
         steps.append(step)
 
+
+
     sliders = [dict(
-        active=11,
-        currentvalue={"prefix": "Slice: "},
+        #active=0,
+        #currentvalue={"prefix": "Slice: "},
         #pad={"t": 50},
         steps=steps
     )]
 
     fig.update_layout(
         width = 1170,
-        height = 735,
+        height = 490,
         sliders=sliders
     )
 
     return fig
 
-def compute_heatmap(pet_scan, model = model, layer_name = 'conv3d_3', eps = 1e-8):
+def scale_array(arr):
+    return (arr - np.min(arr))/(np.max(arr) - np.min(arr))
 
-    pet_scan = np.expand_dims(pet_scan, axis = 0)
-    grad_model = tf.keras.Model(inputs = [model.inputs],
-                                outputs = [model.get_layer(layer_name).output, model.output])
+def vanilla_backprop(pet_scan, model, classidx = 1):
+
+    inputs = tf.cast(np.expand_dims(pet_scan, axis = 0), tf.float32)
 
     with tf.GradientTape() as tape:
+        tape.watch(inputs)
+        prediction = model(inputs)
+        loss = prediction[:,classidx]
 
-        inputs = tf.cast(pet_scan, tf.float32)
+    grads = tape.gradient(loss, inputs)[0]
 
-        (conv_outputs, prediction) = grad_model(inputs)
-        loss = prediction[:,0]
+    backprop_heatmap = grads[:,:,:,0].numpy()
 
-    grads = tape.gradient(loss, conv_outputs)
+    #backprop_heatmap[backprop_heatmap < 0] = 0
+    #backprop_heatmap = np.abs(backprop_heatmap)
+    positive_heatmap = np.maximum(backprop_heatmap, 0)
+    negative_heatmap = np.maximum(-backprop_heatmap, 0)
+    backprop_heatmap = np.abs(backprop_heatmap)
 
-    cast_conv_outputs = tf.cast(conv_outputs > 0, "float32")
-    cast_grads = tf.cast(grads > 0, "float32")
-    guided_grads = cast_conv_outputs * cast_grads * grads
+    backprop_heatmap = scale_array(backprop_heatmap)
+    positive_heatmap = scale_array(positive_heatmap)
+    negative_heatmap = scale_array(negative_heatmap)
 
-    conv_outputs = conv_outputs[0]
-    guided_grads = guided_grads[0]
 
-    weights = tf.reduce_mean(guided_grads, axis = (0,1,2))
-    cam = tf.reduce_sum(tf.multiply(weights, conv_outputs), axis = -1)
+    return backprop_heatmap, positive_heatmap, negative_heatmap
 
-    h_cam, w_cam, d_cam = (cam.shape[0], cam.shape[1], cam.shape[2])
-    h, w, d = (pet_scan.shape[1], pet_scan.shape[2], pet_scan.shape[3])
-    scales = (h/h_cam, w/w_cam, d/d_cam)
+def compute_saliency_map(pet_scan, classidx = 1):
 
-    heat_map = ndimage.zoom(cam.numpy(),
-                            zoom = scales,
-                            mode = 'nearest')
+    backprop_heatmap1, positive_heatmap1, negative_heatmap1 = vanilla_backprop(pet_scan, model1, classidx = classidx)
+    backprop_heatmap2, positive_heatmap2, negative_heatmap2 = vanilla_backprop(pet_scan, model2, classidx = classidx)
+    backprop_heatmap = (backprop_heatmap1+backprop_heatmap2)/2
+    #negative_heatmap = (negative_heatmap1+ negative_heatmap2)/2
+    #positive_heatmap = (positive_heatmap1+ positive_heatmap2)/2
 
-    heat_map = (heat_map - np.min(heat_map))/(np.max(heat_map) - np.min(heat_map) + eps)
-    #heat_map = (heat_map * 255).astype('uint8')
+    #pmax = np.max(positive_heatmap)
+    #pmin = np.min(positive_heatmap)
 
-    return heat_map
+    #nmax = np.max(negative_heatmap)
+    #nmin = np.min(negative_heatmap)
+
+    return scale_array(backprop_heatmap)
