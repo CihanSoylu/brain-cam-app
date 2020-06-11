@@ -5,7 +5,7 @@
     </head>
     <body>
         <div class="container">
-            <h1>Upload a file or look at an example output by clicking submit. </h1>
+            <h1>Upload a file or choose an example to see the output. </h1>
             <hr>
             <form method="post" enctype="multipart/form-data" class="form-inline">
                 <div class="form-group">
@@ -15,6 +15,10 @@
                     <input type="submit" value="Submit", class="btn btn-default">
                 </div>
             </form>
+            <hr>
+            <a href="{{ url_for('show_ad_example') }}">Show an AD example</a>
+
+            <br><a href="{{ url_for('show_cn_example') }}">Show an CN example</a>
         </div>
     </body>
 

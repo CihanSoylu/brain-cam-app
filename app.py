@@ -67,9 +67,12 @@ def index():
                 fig_json=json.dumps({'data': json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder)),
                                     'layout': json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))})
 
+                with open('fig.txt', "w") as file:
+                    file.write(fig_json)
+
                 empty_folder(OUTPUT_DIR)
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
-        else:
+        #else:
 
             #url = 'https://drive.google.com/uc?export=download&id=1DaL2KOLAZ616MFPOgwCQdqEeoUFi2cRa'
             #urllib.request.urlretrieve(url, 'file.zip')
@@ -102,12 +105,23 @@ def index():
 
             #empty_folder(OUTPUT_DIR)
 
-            with open('static/fig.txt', 'r') as myfile:
-                fig_json = myfile.read()
+            #return render_template('show.html', prediction = 0.84, diagnosis = 'Alzheimer\'s Disease', plot_json = fig_json)
 
-            return render_template('show.html', prediction = 0.84, diagnosis = 'Alzheimer\'s Disease', plot_json = fig_json)
 
     return render_template('index.html')
+
+@app.route('/AD_example')
+def show_ad_example():
+    with open('static/ad_fig.txt', 'r') as myfile:
+        fig_json = myfile.read()
+    return render_template('show.html', prediction = 0.84, diagnosis = 'Alzheimer\'s Disease', plot_json = fig_json)
+
+@app.route('/CN_example')
+def show_cn_example():
+    with open('static/cn_fig.txt', 'r') as myfile:
+        fig_json = myfile.read()
+    return render_template('show.html', prediction = 0.87, diagnosis = 'Cognitively Normal', plot_json = fig_json)
+
 
 if __name__ == '__main__':
     app.run()
