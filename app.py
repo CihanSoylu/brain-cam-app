@@ -63,14 +63,9 @@ def index():
                 heat_map = model.compute_saliency_map(pet_scan, classidx = classidx)
 
                 fig = model.create_plot(pet_scan, heat_map)
-                redata = json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder))
-                relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
 
-                fig_json=json.dumps({'data': redata,'layout': relayout})
-
-                with open("myfile", "w") as file1:
-                    # Writing data to a file
-                    file1.write(fig_json)
+                fig_json=json.dumps({'data': json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder)),
+                                    'layout': json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))})
 
                 empty_folder(OUTPUT_DIR)
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
@@ -106,6 +101,7 @@ def index():
             #fig_json=json.dumps({'data': redata,'layout': relayout})
 
             #empty_folder(OUTPUT_DIR)
+
             with open('static/fig.txt', 'r') as myfile:
                 fig_json = myfile.read()
 
