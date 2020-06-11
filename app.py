@@ -77,7 +77,8 @@ def index():
                 zip_ref.extractall(OUTPUT_DIR)
             os.remove('file.zip')
 
-            img_dir = glob.glob(OUTPUT_DIR + '/*')[1]
+            #img_dir = glob.glob(OUTPUT_DIR + '/*')[1]
+            img_dir = OUTPUT_DIR + '/I257156'
 
             dicom_paths = model.get_dicom_paths(img_dir)
 
