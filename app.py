@@ -5,6 +5,8 @@ import plotly
 import json
 import os
 import numpy as np
+import urllib.request
+import glob
 
 import plotly.graph_objects as go
 import plotly
@@ -25,6 +27,7 @@ def empty_folder(path):
             shutil.rmtree(os.path.join(root, d))
 
     os.rmdir(path)
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -66,8 +69,39 @@ def index():
                 fig_json=json.dumps({'data': redata,'layout': relayout})
 
                 empty_folder(OUTPUT_DIR)
-
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
+        else:
+            url = 'https://drive.google.com/uc?export=download&id=1DaL2KOLAZ616MFPOgwCQdqEeoUFi2cRa'
+            urllib.request.urlretrieve(url, 'file.zip')
+            with zipfile.ZipFile('file.zip', 'r') as zip_ref:
+                zip_ref.extractall(OUTPUT_DIR)
+            os.remove('file.zip')
+
+            img_dir = glob.glob(OUTPUT_DIR + '/*')[1]
+
+            dicom_paths = model.get_dicom_paths(img_dir)
+
+            pet_scan = model.get_pet_scan(dicom_paths)
+
+            prediction = model.get_prediction(pet_scan)
+            if prediction[1] > 0.5:
+                diagnosis = 'Alzheimer\'s Disease'
+            else:
+                diagnosis = 'Cognitively Normal'
+
+            classidx = np.argmax(prediction)
+
+            heat_map = model.compute_saliency_map(pet_scan, classidx = classidx)
+
+            fig = model.create_plot(pet_scan, heat_map)
+            redata = json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder))
+            relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
+
+            fig_json=json.dumps({'data': redata,'layout': relayout})
+
+            empty_folder(OUTPUT_DIR)
+            return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
+
     return render_template('index.html')
 
 if __name__ == '__main__':

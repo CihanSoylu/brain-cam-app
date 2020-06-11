@@ -70,7 +70,9 @@ def get_prediction(pet_scan):
 
 def create_plot(petscan, heatmap, num_slices = 60):
 
-    fig = make_subplots(rows=1, cols=3)
+    fig = make_subplots(rows=1,
+                        cols=3,
+                        subplot_titles = ('Original PET scan', 'Saliency Map', 'Overlayed'))
     # Create figure
     #fig = go.Figure()
     zmax = np.max(heatmap)
@@ -95,7 +97,7 @@ def create_plot(petscan, heatmap, num_slices = 60):
     for step in range(num_slices):
         fig.add_trace(
             go.Heatmap(
-                z=heatmap[::-1,:,step], colorscale = 'Plasma', zmax = zmax, zmin = zmin, opacity = 0.5),
+                z=heatmap[::-1,:,step], colorscale = 'Plasma', zmax = zmax, zmin = zmin, opacity = 0.8),
             row=1, col=3)
 
     fig.data[0].visible = True
@@ -106,27 +108,27 @@ def create_plot(petscan, heatmap, num_slices = 60):
 
 
     # Create and add slider
-    steps = []
+    slices = []
     for i in range(num_slices):
-        step = dict(
+        slice = dict(
             method="update",
-            args=[{"visible": [False] * len(fig.data)},
-                  {"title": "Slider switched to slice: " + str(i)}],  # layout attribute
+            args=[{"visible": [False] * len(fig.data)}],  # layout attribute
+            label='Slice {}'.format(i)
         )
-        step['args'][0]['visible'][i] = True
-        step['args'][0]['visible'][i+num_slices] = True
-        step['args'][0]['visible'][i+2*num_slices] = True
-        step['args'][0]['visible'][i+3*num_slices] = True
+        slice['args'][0]['visible'][i] = True
+        slice['args'][0]['visible'][i+num_slices] = True
+        slice['args'][0]['visible'][i+2*num_slices] = True
+        slice['args'][0]['visible'][i+3*num_slices] = True
 
-        steps.append(step)
+        slices.append(slice)
 
 
 
     sliders = [dict(
-        #active=0,
+        active=0,
         #currentvalue={"prefix": "Slice: "},
-        #pad={"t": 50},
-        steps=steps
+        pad={"t": 50},
+        steps=slices
     )]
 
     fig.update_layout(
