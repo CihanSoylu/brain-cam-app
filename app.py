@@ -12,6 +12,8 @@ import plotly.graph_objects as go
 import plotly
 from plotly.subplots import make_subplots
 
+import gc
+
 app = Flask(__name__)
 
 
@@ -67,6 +69,9 @@ def index():
                 relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
 
                 fig_json=json.dumps({'data': redata,'layout': relayout})
+                del fig
+                del redata
+                gc.collect()
 
                 empty_folder(OUTPUT_DIR)
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
@@ -99,6 +104,10 @@ def index():
             relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
 
             fig_json=json.dumps({'data': redata,'layout': relayout})
+            del fig
+            del redata
+
+            gc.collect()
 
             empty_folder(OUTPUT_DIR)
             return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
