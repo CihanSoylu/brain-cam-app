@@ -68,40 +68,48 @@ def index():
 
                 fig_json=json.dumps({'data': redata,'layout': relayout})
 
+                with open("myfile", "w") as file1:
+                    # Writing data to a file
+                    file1.write(fig_json)
+
                 empty_folder(OUTPUT_DIR)
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
         else:
-            url = 'https://drive.google.com/uc?export=download&id=1DaL2KOLAZ616MFPOgwCQdqEeoUFi2cRa'
-            urllib.request.urlretrieve(url, 'file.zip')
-            with zipfile.ZipFile('file.zip', 'r') as zip_ref:
-                zip_ref.extractall(OUTPUT_DIR)
-            os.remove('file.zip')
 
-            #img_dir = glob.glob(OUTPUT_DIR + '/*')[1]
-            img_dir = OUTPUT_DIR + '/I257156'
+            #url = 'https://drive.google.com/uc?export=download&id=1DaL2KOLAZ616MFPOgwCQdqEeoUFi2cRa'
+            #urllib.request.urlretrieve(url, 'file.zip')
+            #with zipfile.ZipFile('file.zip', 'r') as zip_ref:
+            #    zip_ref.extractall(OUTPUT_DIR)
+            #os.remove('file.zip')
 
-            dicom_paths = model.get_dicom_paths(img_dir)
+            ##img_dir = glob.glob(OUTPUT_DIR + '/*')[1]
+            #img_dir = OUTPUT_DIR + '/I257156'
 
-            pet_scan = model.get_pet_scan(dicom_paths)
+            #dicom_paths = model.get_dicom_paths(img_dir)
 
-            prediction = model.get_prediction(pet_scan)
-            if prediction[1] > 0.5:
-                diagnosis = 'Alzheimer\'s Disease'
-            else:
-                diagnosis = 'Cognitively Normal'
+            #pet_scan = model.get_pet_scan(dicom_paths)
 
-            classidx = np.argmax(prediction)
+            #prediction = model.get_prediction(pet_scan)
+            #if prediction[1] > 0.5:
+            #    diagnosis = 'Alzheimer\'s Disease'
+            #else:
+            #    diagnosis = 'Cognitively Normal'
 
-            heat_map = model.compute_saliency_map(pet_scan, classidx = classidx)
+            #classidx = np.argmax(prediction)
 
-            fig = model.create_plot(pet_scan, heat_map)
-            redata = json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder))
-            relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
+            #heat_map = model.compute_saliency_map(pet_scan, classidx = classidx)
 
-            fig_json=json.dumps({'data': redata,'layout': relayout})
+            #fig = model.create_plot(pet_scan, heat_map)
+            #redata = json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder))
+            #relayout = json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))
 
-            empty_folder(OUTPUT_DIR)
-            return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
+            #fig_json=json.dumps({'data': redata,'layout': relayout})
+
+            #empty_folder(OUTPUT_DIR)
+            with open('static/fig.txt', 'r') as myfile:
+                fig_json = myfile.read()
+
+            return render_template('show.html', prediction = 0.84, diagnosis = 'Alzheimer\'s Disease', plot_json = fig_json)
 
     return render_template('index.html')
 
