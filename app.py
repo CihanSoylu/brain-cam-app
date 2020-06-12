@@ -67,8 +67,6 @@ def index():
                 fig_json=json.dumps({'data': json.loads(json.dumps(fig.data, cls=plotly.utils.PlotlyJSONEncoder)),
                                     'layout': json.loads(json.dumps(fig.layout, cls=plotly.utils.PlotlyJSONEncoder))})
 
-                with open('fig.txt', "w") as file:
-                    file.write(fig_json)
 
                 empty_folder(OUTPUT_DIR)
                 return render_template('show.html', prediction = np.round(prediction[classidx], decimals=2), diagnosis = diagnosis, plot_json = fig_json)
