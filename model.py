@@ -16,8 +16,10 @@ import plotly.graph_objects as go
 import plotly
 from plotly.subplots import make_subplots
 
-model1 = tf.keras.models.load_model('static/model/3dcnn_model_dense16_98_78_60_batch32_min_loss.h5')
-model2 = tf.keras.models.load_model('static/model/3dcnn_model_gap_98_78_60_batch32_min_loss_epoch600.h5')
+def get_model():
+    model1 = tf.keras.models.load_model('static/model/3dcnn_model_dense16_98_78_60_batch32_min_loss.h5')
+    model2 = tf.keras.models.load_model('static/model/3dcnn_model_gap_98_78_60_batch32_min_loss_epoch600.h5')
+    return model1, model2
 
 
 def get_dicom_paths(img_dir):
@@ -64,16 +66,18 @@ def get_pet_scan(dicom_paths):
 def get_prediction(pet_scan):
     pet_scan = np.expand_dims(pet_scan, axis=0)
 
+    model1, model2 = get_model()
+
     prediction = (model1.predict(pet_scan).squeeze() + model2.predict(pet_scan).squeeze())/2
     return prediction
 
 
 def create_plot(petscan, heatmap, num_slices = 60):
 
+    # Create figure
     fig = make_subplots(rows=1,
                         cols=3,
                         subplot_titles = ('Original PET scan', 'Saliency Map', 'Overlayed'))
-    # Create figure
     #fig = go.Figure()
     zmax = np.max(heatmap)
     zmin = np.min(heatmap)
@@ -169,6 +173,8 @@ def vanilla_backprop(pet_scan, model, classidx = 1):
     return backprop_heatmap, positive_heatmap, negative_heatmap
 
 def compute_saliency_map(pet_scan, classidx = 1):
+
+    model1, model2 = get_model()
 
     backprop_heatmap1, positive_heatmap1, negative_heatmap1 = vanilla_backprop(pet_scan, model1, classidx = classidx)
     backprop_heatmap2, positive_heatmap2, negative_heatmap2 = vanilla_backprop(pet_scan, model2, classidx = classidx)
