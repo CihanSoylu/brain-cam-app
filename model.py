@@ -53,7 +53,6 @@ def get_pet_scan(dicom_paths):
 
     # Take 75 slices by pruning the first 11 and last 10 slices.
     pet_scan = np.concatenate(slices[16:76], axis=-1)
-    #pet_scan[pet_scan < 500] = 0
 
     # Scale the images.
     minimum = np.min(pet_scan)

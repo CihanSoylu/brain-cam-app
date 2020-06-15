@@ -1,5 +1,28 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}BrainCAM{% endblock %}
 
+
+
+{% block app_content %}
+<div class="container">
+    <h1>Diagnosis: {{ diagnosis }} (with probability {{ prediction }})</h1>
+    <hr>
+    Please wait while the image is looading.
+    <!--
+    <hr>
+    <a href = "{{ url_for('index') }}" class="btn btn-default">Go Back</a>
+  -->
+</div>
+<div id='divPlotly'></div>
+<script type="text/javascript">
+    var plotly_data = {{plot_json | safe}};
+    Plotly.react('divPlotly', plotly_data.data, plotly_data.layout);
+</script>
+{% endblock %}
+
+
+<!--
+<!DOCTYPE html>
 <html>
     <head>
           <title>BrainCAM</title>
@@ -23,3 +46,4 @@
     </body>
 
 </html>
+-->

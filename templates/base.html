@@ -1,0 +1,53 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}{{ title }} BrainCAM{% else %}Welcome to BrainCAM{% endif %}
+{% endblock %}
+
+{% block head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {{ super() }}
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                  <li><a href="{{ url_for('index') }}">Home</a></li>
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Examples &#9660;
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <br>
+                      <center><a class="dropdown-item" href="{{ url_for('show_ad_example')}}">Alzheimer output</a></center>
+                      <br>
+                      <center><a class="dropdown-item" href="{{ url_for('show_cn_example')}}">Cognitively normal output</a></center>
+                    </div>
+                  </li>
+                  <li><a href="{{ url_for('presentation')}} ">Presentation</a></li>
+                  <li><a href="https://github.com/CihanSoylu/brain-cam">GitHub</a></li>
+
+              </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-info" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {# application content needs to be provided in the app_content block #}
+        {% block app_content %}{% endblock %}
+    </div>
+{% endblock %}

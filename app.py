@@ -1,5 +1,7 @@
 import model
 from flask import Flask, request, redirect, url_for, render_template, Response
+from flask_bootstrap import Bootstrap
+
 import zipfile
 import plotly
 import json
@@ -13,6 +15,7 @@ import plotly
 from plotly.subplots import make_subplots
 
 app = Flask(__name__)
+bootstrap = Bootstrap(app)
 
 
 OUTPUT_DIR = 'tmp'
@@ -120,6 +123,9 @@ def show_cn_example():
         fig_json = myfile.read()
     return render_template('show.html', prediction = 0.87, diagnosis = 'Cognitively Normal', plot_json = fig_json)
 
+@app.route('/presentation')
+def presentation():
+    return render_template('presentation.html')
 
 if __name__ == '__main__':
     app.run()
