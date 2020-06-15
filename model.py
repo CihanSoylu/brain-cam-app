@@ -24,20 +24,36 @@ def get_model():
 model1, model2 = get_model()
 
 
+#def get_dicom_paths(img_dir):
+#    dicom_paths = glob.glob(img_dir+'/*')
+#
+#    slices = []
+#    for path in dicom_paths:
+#        n_slice = path.split('_')[-3]
+#        left = path.find('_' + n_slice + '_') + 1
+#        right = left + len(n_slice)
+#        slices.append([path[:left], int(n_slice), path[right:]])
+#
+    # Order slices
+#    slice_df = pd.DataFrame(slices, columns = ['col1', 'slice', 'col3']).sort_values(by='slice')
+#
+#    slice_df['combined'] = slice_df['col1'] + slice_df['slice'].map(lambda x: str(x)) + slice_df['col3']
+
+#    return slice_df['combined'].values
+
 def get_dicom_paths(img_dir):
     dicom_paths = glob.glob(img_dir+'/*')
 
     slices = []
     for path in dicom_paths:
-        n_slice = path.split('_')[-3]
-        left = path.find('_' + n_slice + '_') + 1
-        right = left + len(n_slice)
-        slices.append([path[:left], int(n_slice), path[right:]])
+        n_slice = path.split('/')[2][:2]
+        directory = path.split('/')[:2]
+        slices.append([directory[0] + '/' + directory[1] + '/', int(n_slice), path.split('/')[2][2:]])
 
     # Order slices
-    slice_df = pd.DataFrame(slices, columns = ['col1', 'slice', 'col3']).sort_values(by='slice')
+    slice_df = pd.DataFrame(slices, columns = ['dir', 'slice', 'rest']).sort_values(by='slice')
 
-    slice_df['combined'] = slice_df['col1'] + slice_df['slice'].map(lambda x: str(x)) + slice_df['col3']
+    slice_df['combined'] = slice_df['dir'] + slice_df['slice'].map(lambda x: '0' + str(x) if  x < 10 else str(x)) + slice_df['rest']
 
     return slice_df['combined'].values
 
