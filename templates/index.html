@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 {% block title %}BrainCAM{% endblock %}
 {% block app_content %}
+
   <div class="container">
       <h1>Upload a file or choose an example output from the above menu. </h1>
       <hr>
+      <p> The file must be a zip file containing the slices of the PET scan in dicom format.
+        The file name for each slice should start with the slice number as follows: '01_filename.dcm', '02_filename.dcm', ...  </p>
+      <br>
       <form method="post" enctype="multipart/form-data" class="form-inline">
           <div class="form-group">
               <input type="file" name="file" class="btn btn-default">
@@ -19,6 +23,7 @@
       <br><a href="{{ url_for('show_cn_example') }}">Show an CN example</a>
     -->
   </div>
+
 {% endblock %}
 
 

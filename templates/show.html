@@ -7,7 +7,7 @@
 <div class="container">
     <h1>Diagnosis: {{ diagnosis }} (with probability {{ prediction }})</h1>
     <hr>
-    Please wait while the image is looading.
+    Please wait while the image is loading.
     <!--
     <hr>
     <a href = "{{ url_for('index') }}" class="btn btn-default">Go Back</a>
@@ -18,6 +18,14 @@
     var plotly_data = {{plot_json | safe}};
     Plotly.react('divPlotly', plotly_data.data, plotly_data.layout);
 </script>
+
+<br>
+<ul>
+  <li> The image on the left is the original PET scan. </li>
+  <li> The image in the middle is the Saliency map. This is a map showing what part of the pet scan contributed to the model decision the most. </li>
+  <li> The image on the right is simply the first two images plotted together to make the areas in the saliency maps easier to locate.  </li>
+  <li> Using the slider you can slide through the PET scan and the saliency maps. </li>
+</ul>
 {% endblock %}
 
 
