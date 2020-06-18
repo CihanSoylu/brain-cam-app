@@ -3,9 +3,12 @@
 {% block app_content %}
 
   <div class="container">
-      <h1>Upload a file or choose an example output from the above menu. </h1>
+      <h1> Welcome to BrainCAM </h1>
+      <h2> BrainCAM is a diagnostic tool for Alzheimer's Disease using PET scans.
+        <p>You can start using it by uploading a file below or choosing an example output from the above menu. </p>
+      </h2>
       <hr>
-      <p> The file must be a zip file containing the slices of the PET scan in dicom format.
+      <p> The file must be a zip file containing the axial slices of the PET scan in dicom format.
         The file name for each slice should start with the slice number as follows: '01_filename.dcm', '02_filename.dcm', ...  </p>
       <br>
       <form method="post" enctype="multipart/form-data" class="form-inline">
